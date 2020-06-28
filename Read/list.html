@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+		<script src="js/jquery-3.4.1.js"></script>
+		<script src="bootstrap-4.5.0-dist/js/bootstrap.min.js"></script>
+		<script src="js/vue.js"></script>
+		<link rel="stylesheet" href="bootstrap-4.5.0-dist/css/bootstrap.min.css" />
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/2.1.4/toastr.min.js"></script>
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/2.1.4/toastr.min.css" />
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+	</head>
+	<body>
+		<div id="app">
+			<div class="container">
+				<h1 class="text-center">{{bookName}}</h1>
+				<div class="container-fluid">
+					<div class="row">
+						<div class="col-sm-6 col-lg-3 col-md-4" v-for="(data, i) in bookList" @click="clickChapter(i)">
+							<div class="card">
+								<div class="card-body">
+									<p class="card-text">{{data.name}}</p>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<script type="application/javascript">
+			var app = new Vue({
+				el: '#app',
+				data: {
+					bookName: "",
+					bookList: [],
+				},
+				methods:{
+					clickChapter:function(index) {
+						href = 'content.html' + '?url=' + this.bookList[index].url;
+						window.open(href, '_blank');
+					}
+				}
+			});
+
+			function getQueryVariable(variable) {
+				var query = window.location.search.substring(1);
+				var vars = query.split("&");
+				for (var i = 0; i < vars.length; i++) {
+					var pair = vars[i].split("=");
+					if (pair[0] == variable) {
+						return pair[1];
+					}
+				}
+				return (false);
+			}
+			
+			toastr.options = {
+				closeButton: false,
+				debug: false,
+				progressBar: true,
+				positionClass: "toast-top-center",
+				onclick: null,
+				showDuration: "300",
+				hideDuration: "1000",
+				timeOut: "5000",
+				extendedTimeOut: "1000",
+				showEasing: "swing",
+				hideEasing: "linear",
+				showMethod: "fadeIn",
+				hideMethod: "fadeOut"
+			};
+			
+			$(function(){
+				function loadData() {
+					var id = getQueryVariable("id")
+					toastr.info("加载数据中.....");
+					$.ajax({
+						url: "http://localhost:8080/Read/GetChapterListServlet?id=" + id,
+						type: 'get',
+						datatype: 'json',
+						success: function(data) {
+							app.bookName = data.name;
+							app.bookList = data.data;
+							toastr.clear();
+						}
+					});
+				}
+				loadData();
+			});
+		</script>
+	</body>
+</html>

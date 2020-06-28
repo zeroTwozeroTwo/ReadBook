@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+		<script src="js/jquery-3.4.1.js"></script>
+		<script src="bootstrap-3.3.7-dist/js/bootstrap.min.js"></script>
+		<script src="js/vue.js"></script>
+		<link rel="stylesheet" href="bootstrap-3.3.7-dist/css/bootstrap.min.css" />
+		<link rel="stylesheet" href="css/page-index.css" />
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/2.1.4/toastr.min.js"></script>
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/2.1.4/toastr.min.css" />
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+	</head>
+	<body>
+		<div id="app">
+			<div class="container">
+				<nav class="navbar navbar-default" role="navigation">
+					<div class="container-fluid">
+						<div class="navbar-header">
+							<button type="button" class="navbar-toggle" data-toggle="collapse" data-target='#read-navbar-collapse'>
+								<span class="sr-only">Read</span>
+								<span class="icon-bar"></span>
+								<span class="icon-bar"></span>
+								<span class="icon-bar"></span>
+							</button>
+							<a class="navbar-brand" href="#">Read</a>
+						</div>
+						<div class="collapse navbar-collapse" id="read-navbar-collapse">
+							<ul class="nav navbar-nav">
+								<!-- 自动生成小说分类名 -->
+								<li v-for="(sortname, i) in sortName" @click="getSort(i + 1)" class="sortname-mouse "><a class="#">{{sortname}}</a></li>
+							</ul>
+							<div class="navbar-form navbar-right">
+								<div class="form-group">
+									<input type="text" class="form-control" @keyup.enter="enter" id="input-text" placeholder="请输入要看的小说" />
+								</div>
+								<button type="submit" id="submit" class="btn btn-primary">Submit</button>
+							</div>
+						</div>
+					</div>
+				</nav>
+			</div>
+			<div class="container">
+				<div class="container-fluid">
+					<div class="row">
+						<div class="list-group col-md-7 col-xs-12 col-lg-7 col-sm-7">
+							<a href="#" class="list-group-item active">
+								<h4 class="list-group-item-heading">
+									{{sortName[sortIndex]}}最近更新
+								</h4>
+							</a>
+							<a href="#" class="list-group-item" v-for="(data,i) in sortData.new" @click="clickNew(i)">
+								<h4 class="list-group-item-heading">
+									{{data.name}}
+								</h4>
+								<span class="badge" @click="clickChapter()">{{data.cheapterName}}</span>
+								<p class="list-group-item-text">
+									{{data.author}}
+								</p>
+							</a>
+						</div>
+
+						<div class="list-group col-md-5 col-xs-12 col-lg-5 col-sm-5">
+							<a href="#" class="list-group-item active">
+								<h4 class="list-group-item-heading">
+									{{sortName[sortIndex]}}推荐
+								</h4>
+							</a>
+							<a href="#" class="list-group-item" v-for="(data,i) in sortData.hot" @click="clickHot(i)">
+								<h4 class="list-group-item-heading">
+									{{data.name}}
+								</h4>
+								<span class="badge">荐</span>
+								<p class="list-group-item-text">
+									{{data.author}}
+								</p>
+							</a>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</body>
+	<script type="application/javascript">
+		var app = new Vue({
+			el: '#app',
+			data: {
+				sortName: ['玄幻小说', '修真小说', '都市小说', '历史小说', '网游小说', '科幻小说', '其他小说'],
+				sortData: {},
+				sortIndex: 0,
+			},
+			methods: {
+				getSort: function(index) {
+					if (index - 1 == this.sortIndex) {
+						toastr.warning("已在当前页，请勿重复点击!");
+						return;
+					}
+					toastr.info("加载数据中.....");
+					$.ajax({
+						url: "http://localhost:8080/Read/GetSort?type=" + index,
+						type: 'get',
+						datatype: 'json',
+						success: function(data) {
+							app.sortData = data;
+							console.log(data);
+							app.sortIndex = index - 1;
+							toastr.clear();
+						}
+					});
+				},
+				enter: function() {
+					if ($("#input-text").val() === '') {
+						toastr.error("搜索不能为空");
+						return;
+					}
+					href = 'search.html' + '?name=' + $("#input-text").val();
+					window.open(href, '_blank');
+					$("#input-text").val("");
+				},
+				clickNew: function(index) {
+					href = 'list.html' + '?id=' + this.sortData.new[index].id;
+					window.open(href, '_blank');
+				},
+				clickHot: function(index) {
+					href = 'list.html' + '?id=' + this.sortData.hot[index].id;
+					window.open(href, '_blank');
+				},
+				clickChapter: function() {
+					href = 'content.html' + '?url=' + this.sortData.new[index].cheapterUrl;
+					window.open(href, '_blank');
+				}
+			}
+		});
+		$(function() {
+			$(".sortname-mouse").on({
+				mouseover: function() {
+					if (!$(this).hasClass("choose")) {
+						$(this).addClass("active");
+					}
+				},
+				mouseout: function() {
+					if (!$(this).hasClass("choose")) {
+						$(this).removeClass("active");
+					}
+				}
+			});
+			$(".sortname-mouse").on("click", function() {
+				$(".sortname-mouse").removeClass("active").removeClass("choose");
+				$(this).addClass("active").addClass("choose");
+			})
+
+			toastr.options = {
+				closeButton: false,
+				debug: false,
+				progressBar: true,
+				positionClass: "toast-top-center",
+				onclick: null,
+				showDuration: "300",
+				hideDuration: "1000",
+				timeOut: "5000",
+				extendedTimeOut: "1000",
+				showEasing: "swing",
+				hideEasing: "linear",
+				showMethod: "fadeIn",
+				hideMethod: "fadeOut"
+			};
+
+			$("#submit").click(function() {
+				if ($("#input-text").val() === '') {
+					toastr.error("搜索不能为空");
+					return;
+				}
+				href = 'search.html' + '?name=' + $("#input-text").val();
+				window.open(href, '_blank');
+				$("#input-text").val("");
+			})
+
+			function loadData() {
+				toastr.info("加载数据中.....");
+				$.ajax({
+					url: "http://localhost:8080/Read/GetSort?type=1",
+					type: 'get',
+					datatype: 'json',
+					success: function(data) {
+						app.sortData = data;
+						console.log(data);
+						app.sortIndex = 0;
+						toastr.clear();
+					}
+				});
+				$(".sortname-mouse").first().addClass("active");
+			}
+			loadData();
+		});
+	</script>
+</html>

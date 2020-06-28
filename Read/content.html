@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+		<script src="js/jquery-3.4.1.js"></script>
+		<script src="js/vue.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/2.1.4/toastr.min.js"></script>
+		<script src="bootstrap-3.3.7-dist/js/bootstrap.min.js"></script>
+		<link rel="stylesheet" href="bootstrap-3.3.7-dist/css/bootstrap.min.css" />
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/2.1.4/toastr.min.css" />
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<style>
+			#content{
+				font-size: 19pt;
+				letter-spacing: 0.2em;
+				line-height: 150%;
+				padding-top: 15px;
+				width: 85%;
+				margin: auto;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="app">
+			<div class="container">
+				<h1 class="text-center">{{data.name}}</h1>
+				<div class="read—content">
+					<div v-html="data.content"></div>
+				</div>
+				<nav v-show="isShow">
+					<ul class="pager">
+						<li class="previous" @click="preClick()"><a href="#"><span aria-hidden="true">&larr;</span>Previous</a></li>
+						<li class="text-center" @click="backList()"><a href="#">返回目录</a></li>
+						<li class="next" @click="nextClick()"><a href="#">Next <span aria-hidden="true">&rarr;</span></a></li>
+					</ul>
+				</nav>
+			</div>
+		</div>
+		<script type="application/javascript">
+			var app = new Vue({
+				el: "#app",
+				data: {
+					data: {},
+					isShow: false
+				},
+				methods: {
+					preClick: function() {
+						toastr.info("加载数据中.....");
+						$.ajax({
+							url: "http://localhost:8080/Read/GetChapterText?url=" + this.data.pre,
+							type: 'get',
+							datatype: 'json',
+							success: function(data) {
+								if (data.code != "0") {
+									app.data = data;
+									toastr.clear();
+								} else {
+									toastr.warning("没有上一页.....");
+								}
+							}
+						});
+					},
+					nextClick: function() {
+						toastr.info("加载数据中.....");
+						$.ajax({
+							url: "http://localhost:8080/Read/GetChapterText?url=" + this.data.next,
+							type: 'get',
+							datatype: 'json',
+							success: function(data) {
+								if (data.code != "0") {
+									app.data = data;
+									toastr.clear();
+								} else {
+									toastr.warning("没有更多了.....");
+								}
+							}
+						});
+					},
+					backList: function() {
+						href = 'list.html' + '?id=' + app.data.id;
+						window.open(href, '_self'); //在自身窗口上打开
+					}
+				}
+			});
+
+			function getQueryVariable(variable) {
+				var query = window.location.search.substring(1);
+				var vars = query.split("&");
+				for (var i = 0; i < vars.length; i++) {
+					var pair = vars[i].split("=");
+					if (pair[0] == variable) {
+						return pair[1];
+					}
+				}
+				return (false);
+			}
+
+			toastr.options = {
+				closeButton: false,
+				debug: false,
+				progressBar: true,
+				positionClass: "toast-top-center",
+				onclick: null,
+				showDuration: "300",
+				hideDuration: "1000",
+				timeOut: "5000",
+				extendedTimeOut: "1000",
+				showEasing: "swing",
+				hideEasing: "linear",
+				showMethod: "fadeIn",
+				hideMethod: "fadeOut"
+			};
+
+			$(function() {
+				function loadData() {
+					var url = getQueryVariable("url")
+					var id = getQueryVariable("id");
+					app.bookId = id;
+					toastr.info("加载数据中.....");
+					$.ajax({
+						url: "http://localhost:8080/Read/GetChapterText?url=" + url,
+						type: 'get',
+						datatype: 'json',
+						success: function(data) {
+							app.data = data;
+							toastr.clear();
+							app.isShow = true;
+						}
+					});
+				}
+				loadData();
+			});
+		</script>
+	</body>
+</html>
